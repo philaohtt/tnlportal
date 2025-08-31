@@ -1552,21 +1552,40 @@
 
         // Profile tab switching
         function switchProfileTab(tab) {
-            // Hide all tab contents
-            document.getElementById('basicProfileContent').classList.add('hidden');
-            document.getElementById('attendanceProfileContent').classList.add('hidden');
-            document.getElementById('studyprogressProfileContent').classList.add('hidden');
-            document.getElementById('accountsProfileContent').classList.add('hidden');
-            document.getElementById('tuitionProfileContent').classList.add('hidden');
+            // Hide all tab contents with null checks
+            const tabContents = [
+                'basicProfileContent',
+                'attendanceProfileContent', 
+                'studyprogressProfileContent',
+                'accountsProfileContent',
+                'tuitionProfileContent'
+            ];
             
-            // Reset all tab buttons
-            document.querySelectorAll('[id$="ProfileTab"]').forEach(tabBtn => {
-                tabBtn.className = "py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm whitespace-nowrap";
+            tabContents.forEach(contentId => {
+                const element = document.getElementById(contentId);
+                if (element) {
+                    element.classList.add('hidden');
+                }
             });
             
-            // Show selected tab content and activate button
-            document.getElementById(tab + 'ProfileContent').classList.remove('hidden');
-            document.getElementById(tab + 'ProfileTab').className = "py-2 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600 whitespace-nowrap";
+            // Reset all tab buttons with null checks
+            document.querySelectorAll('[id$="ProfileTab"]').forEach(tabBtn => {
+                if (tabBtn) {
+                    tabBtn.className = "py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm whitespace-nowrap";
+                }
+            });
+            
+            // Show selected tab content and activate button with null checks
+            const selectedContent = document.getElementById(tab + 'ProfileContent');
+            const selectedTab = document.getElementById(tab + 'ProfileTab');
+            
+            if (selectedContent) {
+                selectedContent.classList.remove('hidden');
+            }
+            
+            if (selectedTab) {
+                selectedTab.className = "py-2 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600 whitespace-nowrap";
+            }
             
             // Load data for specific tabs when they're opened
             if (tab === 'studyprogress' && window.currentProgressData) {
@@ -1575,7 +1594,7 @@
             } else if (tab === 'attendance' && window.currentProgressData) {
                 updateAttendanceRecords(window.currentProgressData.attendance);
             } else if (tab === 'tuition' && currentStudent) {
-                loadTuitionData(currentStudent.studentId);
+                loadTuitionData(currentStudent.studentId || currentStudent.id);
             }
         }
 
@@ -1893,66 +1912,113 @@
             }).join('');
         }
 
-        // Event Listeners
-        searchInput.addEventListener('input', filterStudents);
-        classFilter.addEventListener('change', filterStudents);
-        refreshBtn.addEventListener('click', () => {
-            loadStudentsFromFirebase();
-        });
+        // Event Listeners (only add if elements exist and not in profile mode)
+        function addEventListeners() {
+            const searchInput = document.getElementById('searchInput');
+            const classFilter = document.getElementById('classFilter');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const closeProfileModal = document.getElementById('closeProfileModal');
+            const exportPdfBtn = document.getElementById('exportPdfBtn');
+            const exportImageBtn = document.getElementById('exportImageBtn');
+            const embedCodeBtn = document.getElementById('embedCodeBtn');
+            const closeEmbedModal = document.getElementById('closeEmbedModal');
+            const copyEmbedCode = document.getElementById('copyEmbedCode');
+            const profileModal = document.getElementById('profileModal');
+            const embedModal = document.getElementById('embedModal');
 
-        closeProfileModal.addEventListener('click', () => {
-            profileModal.classList.add('hidden');
-            profileModal.classList.remove('flex');
-        });
-
-        document.getElementById('exportPdfBtn').addEventListener('click', exportToPDF);
-        document.getElementById('exportImageBtn').addEventListener('click', exportToImage);
-
-        document.getElementById('embedCodeBtn').addEventListener('click', () => {
-            if (!currentStudent) return;
-            
-            // Create unique profile URL
-            const baseUrl = window.location.origin + window.location.pathname;
-            const profileUrl = `${baseUrl}?profile=${currentStudent.studentId}`;
-            
-            const embedCode = `<iframe src="${profileUrl}" width="100%" height="800" frameborder="0" style="min-height: 600px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"></iframe>`;
-            document.getElementById('embedCode').value = embedCode;
-            
-            // Also show the direct link
-            document.getElementById('directProfileLink').value = profileUrl;
-            
-            embedModal.classList.remove('hidden');
-            embedModal.classList.add('flex');
-        });
-
-        closeEmbedModal.addEventListener('click', () => {
-            embedModal.classList.add('hidden');
-            embedModal.classList.remove('flex');
-        });
-
-        copyEmbedCode.addEventListener('click', () => {
-            document.getElementById('embedCode').select();
-            document.execCommand('copy');
-            copyEmbedCode.textContent = 'Copied!';
-            setTimeout(() => {
-                copyEmbedCode.textContent = 'Copy to Clipboard';
-            }, 2000);
-        });
-
-        // Close modals when clicking outside
-        profileModal.addEventListener('click', (e) => {
-            if (e.target === profileModal) {
-                profileModal.classList.add('hidden');
-                profileModal.classList.remove('flex');
+            if (searchInput) {
+                searchInput.addEventListener('input', filterStudents);
             }
-        });
-
-        embedModal.addEventListener('click', (e) => {
-            if (e.target === embedModal) {
-                embedModal.classList.add('hidden');
-                embedModal.classList.remove('flex');
+            if (classFilter) {
+                classFilter.addEventListener('change', filterStudents);
             }
-        });
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', () => {
+                    loadStudentsFromFirebase();
+                });
+            }
+
+            if (closeProfileModal) {
+                closeProfileModal.addEventListener('click', () => {
+                    profileModal.classList.add('hidden');
+                    profileModal.classList.remove('flex');
+                });
+            }
+
+            if (exportPdfBtn) {
+                exportPdfBtn.addEventListener('click', exportToPDF);
+            }
+            if (exportImageBtn) {
+                exportImageBtn.addEventListener('click', exportToImage);
+            }
+
+            if (embedCodeBtn) {
+                embedCodeBtn.addEventListener('click', () => {
+                    if (!currentStudent) return;
+                    
+                    // Create unique profile URL
+                    const baseUrl = window.location.origin + window.location.pathname;
+                    const profileUrl = `${baseUrl}?profile=${currentStudent.studentId}`;
+                    
+                    const embedCode = `<iframe src="${profileUrl}" width="100%" height="800" frameborder="0" style="min-height: 600px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"></iframe>`;
+                    const embedCodeElement = document.getElementById('embedCode');
+                    if (embedCodeElement) {
+                        embedCodeElement.value = embedCode;
+                    }
+                    
+                    // Also show the direct link
+                    const directProfileLinkElement = document.getElementById('directProfileLink');
+                    if (directProfileLinkElement) {
+                        directProfileLinkElement.value = profileUrl;
+                    }
+                    
+                    if (embedModal) {
+                        embedModal.classList.remove('hidden');
+                        embedModal.classList.add('flex');
+                    }
+                });
+            }
+
+            if (closeEmbedModal) {
+                closeEmbedModal.addEventListener('click', () => {
+                    embedModal.classList.add('hidden');
+                    embedModal.classList.remove('flex');
+                });
+            }
+
+            if (copyEmbedCode) {
+                copyEmbedCode.addEventListener('click', () => {
+                    const embedCodeElement = document.getElementById('embedCode');
+                    if (embedCodeElement) {
+                        embedCodeElement.select();
+                        document.execCommand('copy');
+                        copyEmbedCode.textContent = 'Copied!';
+                        setTimeout(() => {
+                            copyEmbedCode.textContent = 'Copy Embed Code';
+                        }, 2000);
+                    }
+                });
+            }
+
+            // Close modals when clicking outside
+            if (profileModal) {
+                profileModal.addEventListener('click', (e) => {
+                    if (e.target === profileModal) {
+                        profileModal.classList.add('hidden');
+                        profileModal.classList.remove('flex');
+                    }
+                });
+            }
+
+            if (embedModal) {
+                embedModal.addEventListener('click', (e) => {
+                    if (e.target === embedModal) {
+                        embedModal.classList.add('hidden');
+                        embedModal.classList.remove('flex');
+                    }
+                });
+            }
+        }
 
         // Initialize
         updateSyncStatus('loading', 'Initializing...');
@@ -1962,18 +2028,27 @@
         const profileParam = urlParams.get('profile');
         const studentParam = urlParams.get('student'); // Legacy support
         
+        console.log('URL Parameters:', { profileParam, studentParam });
+        
         if (profileParam || studentParam) {
             isProfileMode = true;
             const targetStudentId = profileParam || studentParam;
             
+            console.log('Profile mode activated for student ID:', targetStudentId);
+            
             // Hide main interface and show loading
-            document.querySelector('.max-w-7xl').style.display = 'none';
+            const mainContainer = document.querySelector('.max-w-7xl');
+            if (mainContainer) {
+                mainContainer.style.display = 'none';
+            }
+            
             document.body.innerHTML = `
                 <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
                     <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
                         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
                         <h2 class="text-xl font-semibold text-gray-900 mb-2">Loading Student Profile</h2>
                         <p class="text-gray-600">Please wait while we fetch the student information...</p>
+                        <p class="text-xs text-gray-500 mt-2">Student ID: ${targetStudentId}</p>
                     </div>
                 </div>
             `;
@@ -1981,7 +2056,9 @@
             // Load student data and show profile
             loadStudentForProfile(targetStudentId);
         } else {
-            // Normal directory mode
+            console.log('Normal directory mode');
+            // Normal directory mode - add event listeners and load data
+            addEventListeners();
             loadStudentsFromFirebase();
         }
 
@@ -2583,15 +2660,35 @@
         // Load student for profile mode
         async function loadStudentForProfile(studentId) {
             try {
-                const studentDoc = await db.collection('students').doc(studentId).get();
+                // First try to find by document ID
+                let studentDoc = await db.collection('students').doc(studentId).get();
+                let studentData = null;
                 
-                if (!studentDoc.exists) {
+                if (studentDoc.exists) {
+                    studentData = { id: studentDoc.id, ...studentDoc.data() };
+                } else {
+                    // If not found by document ID, search by studentId field
+                    console.log('Student not found by document ID, searching by studentId field...');
+                    const querySnapshot = await db.collection('students')
+                        .where('studentId', '==', studentId)
+                        .limit(1)
+                        .get();
+                    
+                    if (!querySnapshot.empty) {
+                        const doc = querySnapshot.docs[0];
+                        studentData = { id: doc.id, ...doc.data() };
+                        console.log('Found student by studentId field:', studentData);
+                    }
+                }
+                
+                if (!studentData) {
+                    console.log('Student not found with ID:', studentId);
                     showProfileError('Student not found', 'The requested student profile could not be found.');
                     return;
                 }
                 
-                const studentData = { id: studentDoc.id, ...studentDoc.data() };
                 currentStudent = studentData;
+                console.log('Loading profile for student:', studentData);
                 
                 // Create profile-only interface
                 createProfileOnlyInterface(studentData);
@@ -2665,6 +2762,9 @@
                                     <button type="button" onclick="switchProfileTab('studyprogress')" id="studyprogressProfileTab" class="py-3 px-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm whitespace-nowrap">
                                         📚 <span data-en="Progress" data-vi="Tiến Độ">Progress</span>
                                     </button>
+                                    <button type="button" onclick="switchProfileTab('accounts')" id="accountsProfileTab" class="py-3 px-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm whitespace-nowrap">
+                                        👤 <span data-en="Accounts" data-vi="Tài Khoản">Accounts</span>
+                                    </button>
                                     <button type="button" onclick="switchProfileTab('tuition')" id="tuitionProfileTab" class="py-3 px-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm whitespace-nowrap">
                                         💰 <span data-en="Tuition" data-vi="Học Phí">Tuition</span>
                                     </button>
@@ -2678,13 +2778,151 @@
                         </div>
                     </div>
 
-                    <!-- Payment Modal (reuse existing) -->
-                    ${document.getElementById('paymentModal').outerHTML}
+                    <!-- Payment Modal -->
+                    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+                        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                            <!-- Modal Header -->
+                            <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-6 rounded-t-lg">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h3 class="text-xl font-bold mb-1">💳 <span data-en="Payment Instructions" data-vi="Hướng Dẫn Thanh Toán">Payment Instructions</span></h3>
+                                        <p class="text-green-100"><span data-en="Bank Transfer Details" data-vi="Chi Tiết Chuyển Khoản">Bank Transfer Details</span></p>
+                                    </div>
+                                    <button id="closePaymentModal" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Modal Content -->
+                            <div class="p-6">
+                                <p class="text-gray-700 mb-6"><span data-en="Please make bank transfers into the following account:" data-vi="Vui lòng chuyển khoản vào tài khoản sau:">Please make bank transfers into the following account:</span></p>
+                                
+                                <!-- Bank Details -->
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-600 mb-1"><span data-en="Bank Name" data-vi="Tên Ngân Hàng">Bank Name</span></label>
+                                                <p class="text-lg font-semibold text-gray-900">Techcombank</p>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-600 mb-1"><span data-en="Account Holder" data-vi="Chủ Tài Khoản">Account Holder</span></label>
+                                                <p class="text-lg font-semibold text-gray-900">HOANG THANH TUNG</p>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-600 mb-1"><span data-en="Account Number" data-vi="Số Tài Khoản">Account Number</span></label>
+                                                <div class="flex items-center gap-2">
+                                                    <p class="text-lg font-semibold text-gray-900 font-mono">5141 4131 319</p>
+                                                    <button onclick="copyToClipboard('5141 4131 319')" class="text-blue-600 hover:text-blue-800 p-1">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-600 mb-1"><span data-en="Amount" data-vi="Số Tiền">Amount</span></label>
+                                                <div class="flex items-center gap-2">
+                                                    <p id="paymentAmount" class="text-lg font-bold text-red-600">0 VND</p>
+                                                    <button onclick="copyPaymentAmount()" class="text-blue-600 hover:text-blue-800 p-1">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-4">
+                                        <label class="block text-sm font-medium text-gray-600 mb-1"><span data-en="Transfer Content" data-vi="Nội Dung Chuyển Khoản">Transfer Content</span></label>
+                                        <div class="flex items-center gap-2">
+                                            <p id="paymentContent" class="text-lg font-semibold text-gray-900 font-mono bg-white px-3 py-2 rounded border flex-1">Loading...</p>
+                                            <button onclick="copyPaymentContent()" class="text-blue-600 hover:text-blue-800 p-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- QR Code Section -->
+                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-4">📱 <span data-en="Quick Payment QR Code" data-vi="Mã QR Thanh Toán Nhanh">Quick Payment QR Code</span></h4>
+                                    <div class="flex justify-center mb-4">
+                                        <div id="qrCodeContainer" class="bg-white p-4 rounded-lg border-2 border-gray-300">
+                                            <img id="qrCodeImage" src="" alt="VietQR Payment Code" class="w-48 h-48 mx-auto" style="display: none;">
+                                            <div id="qrCodeLoading" class="w-48 h-48 flex items-center justify-center text-gray-500">
+                                                <div class="text-center">
+                                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                                                    <p class="text-sm">Generating QR...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-2">
+                                        <span data-en="Scan this QR code with your banking app for quick payment" data-vi="Quét mã QR này bằng ứng dụng ngân hàng để thanh toán nhanh">Scan this QR code with your banking app for quick payment</span>
+                                    </p>
+                                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                                        <div class="flex items-center gap-2">
+                                            <div class="text-yellow-600">⚠️</div>
+                                            <p class="text-sm text-yellow-800 font-medium">
+                                                <span data-en="This is a one-time code. Please do NOT reuse it in the future." data-vi="Đây là mã một lần. Vui lòng KHÔNG sử dụng lại trong tương lai.">This is a one-time code. Please do NOT reuse it in the future.</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Status -->
+                                <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                    <div class="flex items-start gap-3">
+                                        <div class="text-yellow-600 mt-1">⚠️</div>
+                                        <div class="flex-1">
+                                            <h5 class="font-semibold text-yellow-800 mb-1"><span data-en="Payment Confirmation" data-vi="Xác Nhận Thanh Toán">Payment Confirmation</span></h5>
+                                            <p class="text-sm text-yellow-700 mb-3">
+                                                <span data-en="Please confirm you have completed the transaction. Our accountants will check and update the payment status in 5-10 days maximum." data-vi="Vui lòng xác nhận bạn đã hoàn thành giao dịch. Kế toán của chúng tôi sẽ kiểm tra và cập nhật trạng thái thanh toán trong tối đa 5-10 ngày.">Please confirm you have completed the transaction. Our accountants will check and update the payment status in 5-10 days maximum.</span>
+                                            </p>
+                                            <button id="checkPaymentBtn" onclick="confirmPaymentCompleted()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                <span data-en="I confirm that I have completed the transaction" data-vi="Tôi xác nhận đã hoàn thành giao dịch">I confirm that I have completed the transaction</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
 
             // Initialize profile data
             initializeProfileData(student);
+            
+            // Add payment modal event listeners for profile mode
+            const closePaymentModalBtn = document.getElementById('closePaymentModal');
+            const paymentModal = document.getElementById('paymentModal');
+            
+            if (closePaymentModalBtn && paymentModal) {
+                closePaymentModalBtn.addEventListener('click', () => {
+                    paymentModal.classList.add('hidden');
+                    paymentModal.classList.remove('flex');
+                });
+                
+                paymentModal.addEventListener('click', (e) => {
+                    if (e.target.id === 'paymentModal') {
+                        paymentModal.classList.add('hidden');
+                        paymentModal.classList.remove('flex');
+                    }
+                });
+            }
         }
 
         // Create profile tab contents
@@ -2836,6 +3074,14 @@
                     </div>
                 </div>
 
+                <!-- Study Accounts Tab -->
+                <div id="accountsProfileContent" class="space-y-4 hidden">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-3"><span data-en="Study Accounts" data-vi="Tài Khoản Học Tập">Study Accounts</span></h4>
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <p class="text-gray-600"><span data-en="Study accounts management will be implemented here." data-vi="Quản lý tài khoản học tập sẽ được triển khai tại đây.">Study accounts management will be implemented here.</span></p>
+                    </div>
+                </div>
+
                 <!-- Tuition Tab -->
                 <div id="tuitionProfileContent" class="space-y-4 hidden">
                     <h4 class="text-lg font-semibold text-gray-900 mb-3"><span data-en="Tuition Information" data-vi="Thông Tin Học Phí">Tuition Information</span></h4>
@@ -2984,5 +3230,5 @@
         window.confirmPaymentCompleted = confirmPaymentCompleted;
         window.copyDirectLink = copyDirectLink;
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'977ced20c5bb8623',t:'MTc1NjY0NzQ4Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'977cfe45a6278623',t:'MTc1NjY0ODE4OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
