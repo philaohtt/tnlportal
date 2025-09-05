@@ -69,10 +69,12 @@
                 </div>
             </div>
 
-            <!-- Split Layout: Tuition Details (Left) and Payment Summary (Right) -->
+            <!-- Split Layout: Tuition Details and Payment Summary -->
 
-                <!-- Right Column: Payment Summary -->
-                <div class="lg:col-span-1">
+                <!-- Payment Summary -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+		<div class="lg:col-span-1">
                     <div class="bg-white border border-gray-200 rounded-lg p-6 sticky top-4">
                         <h5 class="font-semibold text-gray-900 mb-4"><span data-en="Payment Summary" data-vi="Tóm Tắt Học Phí Cần Đóng">Payment Summary</span></h5>
                         
@@ -93,8 +95,7 @@
                     </div>
                 </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Left Column: Tuition Details -->
+                <!-- Tuition Details -->
                 <div class="lg:col-span-2 space-y-6">
 
 
@@ -190,7 +191,12 @@
                         <div class="space-y-6">
                             <!-- Bank Transfer Details -->
                             <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                                <p class="text-sm text-red-800 mb-2" data-en="Please scroll down for the QR code" data-vi="Vui lòng xem mã QR ở phía dưới">Please scroll down for the QR code</p>
+
+				<h4 class="font-semibold text-red-800 mb-3 flex items-center">
+                                    ⚠️ <span data-en="Notes when making " data-vi="Thông Tin Chuyển Khoản" class="ml-2">Bank Transfer Details</span>
+                                </h4>
+
+                              <p class="text-sm text-red-800 mb-2" data-en="Scroll down to make confirmation once you finish the transaction. We can only process the payment once it is confirmed." data-vi="Vui lòng bấm nút Xác nhận ở phía dưới sau khi hoàn thành đóng phí. Chúng tôi sẽ không thể xử lý và cập nhật phí khi chưa có xác nhận.">Please scroll down for the QR code</p>
 
 				<h4 class="font-semibold text-gray-900 mb-3 flex items-center">
                                     🏦 <span data-en="Bank Transfer Details" data-vi="Thông Tin Chuyển Khoản" class="ml-2">Bank Transfer Details</span>
