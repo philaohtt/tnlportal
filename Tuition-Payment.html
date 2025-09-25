@@ -9,6 +9,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     <style>
+        body {
+            box-sizing: border-box;
+        }
         .tab-content {
             max-height: 0;
             overflow: hidden;
@@ -599,6 +602,7 @@
                         month: data.month,
                         year: data.year,
                         status: data.status,
+                        paymentDate: data.paymentDate || null,
                         name: `Học phí tháng ${data.month}/${data.year}`
                     });
                 });
@@ -616,6 +620,7 @@
                                 month: data.month,
                                 year: data.year,
                                 status: data.status,
+                                paymentDate: data.paymentDate || null,
                                 name: fee.name || 'Phí bổ sung'
                             });
                         });
@@ -655,6 +660,33 @@
             updateFeeList('paid-tuition-list-desktop', paidFees, 'green');
         }
 
+        // Format payment date
+        function formatPaymentDate(paymentDate) {
+            if (!paymentDate) return '';
+            
+            // Handle different date formats
+            let date;
+            if (paymentDate.toDate) {
+                // Firebase Timestamp
+                date = paymentDate.toDate();
+            } else if (typeof paymentDate === 'string') {
+                // String date
+                date = new Date(paymentDate);
+            } else if (paymentDate instanceof Date) {
+                // Already a Date object
+                date = paymentDate;
+            } else {
+                return '';
+            }
+            
+            // Format as dd/mm/yyyy
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            
+            return `${day}/${month}/${year}`;
+        }
+
         // Update individual fee list
         function updateFeeList(elementId, fees, colorTheme) {
             const listElement = document.getElementById(elementId);
@@ -675,19 +707,27 @@
                 green: 'bg-green-50 border-green-200 text-green-800'
             };
 
-            listElement.innerHTML = fees.map(fee => `
-                <div class="border rounded-lg p-3 ${colorClasses[colorTheme]}">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="font-medium text-sm">${fee.name}</div>
-                            <div class="text-xs opacity-75 mt-1">${fee.month}/${fee.year}</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="font-bold">${formatCurrency(fee.amount)}</div>
+            listElement.innerHTML = fees.map(fee => {
+                // For paid fees, show payment date if available, otherwise show tuition month/year
+                let dateDisplay = `${fee.month}/${fee.year}`;
+                if (colorTheme === 'green' && fee.paymentDate) {
+                    dateDisplay = formatPaymentDate(fee.paymentDate);
+                }
+                
+                return `
+                    <div class="border rounded-lg p-3 ${colorClasses[colorTheme]}">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="font-medium text-sm">${fee.name}</div>
+                                <div class="text-xs opacity-75 mt-1">${dateDisplay}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold">${formatCurrency(fee.amount)}</div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // Update total amount
@@ -1183,5 +1223,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'984b220bd4078494',t:'MTc1ODgwOTcxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'984b89ac308909d4',t:'MTc1ODgxMzk2NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
